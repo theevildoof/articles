@@ -1,7 +1,6 @@
 title: Articles
 description: A starter template for a Jeykll site using the Just the Docs theme!
-# theme: just-the-docs
-# Color scheme supports "light" (default) and "dark"
+theme: just-the-docs
 color_scheme: dark
 
 url: https://theevildoof.github.io
