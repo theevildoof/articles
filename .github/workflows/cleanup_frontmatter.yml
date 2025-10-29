@@ -1,0 +1,32 @@
+name: Cleanup YAML front-matter fences
+
+on:
+  push:
+    paths:
+      - docs/notebooks/**/*.md
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Run front-matter cleanup script
+        run: |
+          python scripts/cleanup_frontmatter.py docs/notebooks
+      - name: Commit changes if any
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "actions@github.com"
+          git add docs/notebooks/**/*.md
+          if ! git diff --quiet; then
+            git commit -m "Cleanup front-matter fences in notebooks"
+            git push
+          else
+            echo "No changes to commit"
+          fi

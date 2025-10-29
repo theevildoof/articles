@@ -7,6 +7,4 @@ execute:
 
 format: gfm
 
-# Add default Jekyll front matter keys you want on every page
-metadata:
-  layout: default
+
