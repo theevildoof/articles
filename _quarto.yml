@@ -1,0 +1,12 @@
+# _quarto.yml
+project:
+  output-dir: docs
+
+execute:
+  enabled: false   # don't re-run code cells; keep notebook outputs
+
+format: gfm
+
+# Add default Jekyll front matter keys you want on every page
+metadata:
+  layout: default
