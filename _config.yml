@@ -2,8 +2,14 @@ title: Articles
 description: A starter template for a Jeykll site using the Just the Docs theme!
 theme: just-the-docs
 color_scheme: dark
-render:
-  - "docs/notebooks/*.md"
+
+
+defaults:
+  - scope:
+      path: "docs" # an empty string here means all files in the project
+      type: "pages"
+    values:
+      layout: "default"
 
 url: https://theevildoof.github.io
 baseurl: /articles  # Important: this is the repo name
