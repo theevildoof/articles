@@ -1,32 +1,32 @@
-name: Cleanup YAML front-matter fences
+name: Clean front-matter in docs/notebooks
 
 on:
   push:
     paths:
-      - docs/notebooks/*.md
+      - 'docs/notebooks/**/*.md'
 
 jobs:
   cleanup:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - name: Install Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.x'
+      - name: Ensure script is executable
+        run: chmod +x .github/scripts/cleanup-frontmatter.sh
 
-      - name: Run front-matter cleanup script
+      - name: Find and clean fenced YAML in markdown files
         run: |
-          python scripts/cleanup_frontmatter.py docs/notebooks
+          find docs/notebooks -type f -name '*.md' | while read f; do
+            ./.github/scripts/cleanup-frontmatter.sh "$f"
+          done
+        shell: bash
+
       - name: Commit changes if any
         run: |
           git config user.name "github-actions[bot]"
-          git config user.email "actions@github.com"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
           git add docs/notebooks/*.md
-          if ! git diff --quiet; then
-            git commit -m "Cleanup front-matter fences in notebooks"
-            git push
-          else
-            echo "No changes to commit"
-          fi
+          git diff --quiet || git commit -m "chore: clean fenced YAML front matter in markdown files"
+          git push
+        shell: bash
