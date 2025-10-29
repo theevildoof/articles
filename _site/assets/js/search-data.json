@@ -1,11 +1,4 @@
 {"0": {
-    "doc": "1. vanilla implementation",
-    "title": "1. vanilla implementation",
-    "content": "abcdsfa . import matplotlib.pyplot as plt import numpy as np # Example data (replace this with your variable) std_max = np.random.rand(100) # Simple line plot plt.plot(std_max) plt.title(\"Standard Deviation per Sample\") plt.xlabel(\"Sample Index\") plt.ylabel(\"std_max\") plt.show() . ",
-    "url": "/articles/docs/notebooks/1.%20vanilla_implementation.html",
-    
-    "relUrl": "/docs/notebooks/1.%20vanilla_implementation.html"
-  },"1": {
     "doc": "Table of Contents",
     "title": "Table of Contents",
     "content": "I’m trying to write some blogs, let’s see how it goes! dsdsf . ",
