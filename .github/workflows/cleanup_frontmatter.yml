@@ -29,3 +29,6 @@ jobs:
           git diff --quiet || git commit -m "chore: clean front-matter in markdown files"
           git push
         shell: bash
+
+permissions:
+  contents: write
