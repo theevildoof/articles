@@ -23,7 +23,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "actions@github.com"
-          git add docs/notebooks/**/*.md
+          git add docs/notebooks/*.md
           if ! git diff --quiet; then
             git commit -m "Cleanup front-matter fences in notebooks"
             git push
