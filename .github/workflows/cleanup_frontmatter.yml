@@ -5,19 +5,24 @@ on:
     paths:
       - 'docs/notebooks/**/*.md'
 
+permissions:
+  contents: write
+
 jobs:
   cleanup:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
 
       - name: Make cleanup script executable
-        run: chmod +x .github/scripts/cleanup-frontmatter.sh
+        run: chmod +x .github/scripts/cleanup_frontmatter.sh
 
       - name: Clean fenced YAML & leading blank lines
         run: |
           find docs/notebooks -type f -name '*.md' | while read f; do
-            ./.github/scripts/cleanup-frontmatter.sh "$f"
+            ./.github/scripts/cleanup_frontmatter.sh "$f"
           done
         shell: bash
 
@@ -26,9 +31,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add docs/notebooks/*.md
-          git diff --quiet || git commit -m "chore: clean front-matter in markdown files"
-          git push
+          git diff --quiet || (git commit -m "chore: clean front-matter in markdown files" && git push)
         shell: bash
-
-permissions:
-  contents: write
