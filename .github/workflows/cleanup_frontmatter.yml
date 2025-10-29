@@ -3,7 +3,7 @@ name: Cleanup YAML front-matter fences
 on:
   push:
     paths:
-      - docs/notebooks/**/*.md
+      - docs/notebooks/*.md
 
 jobs:
   cleanup:
