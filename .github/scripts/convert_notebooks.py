@@ -21,56 +21,6 @@ if str(SCRIPT_DIR) not in sys.path:
 from frontmatter import normalize_front_matter
 
 
-def ensure_unique_output_filenames(nb_node: nbformat.NotebookNode) -> None:
-    """Adjust output metadata so extracted files always have unique names."""
-
-    used: set[str] = set()
-
-    def allocate(original: str) -> str:
-        path = Path(original)
-        stem = path.stem
-        suffix = path.suffix
-        parent = path.parent
-
-        candidate = original
-        index = 1
-        while candidate in used:
-            candidate = str(parent / f"{stem}-{index}{suffix}")
-            index += 1
-        used.add(candidate)
-        return candidate
-
-    for cell in nb_node.cells:
-        for output in getattr(cell, "outputs", []):
-            metadata = getattr(output, "metadata", {})
-            if not isinstance(metadata, dict):
-                continue
-
-            filenames: dict[str, list[tuple[str, str | None]]] = {}
-
-            filename = metadata.get("filename")
-            if isinstance(filename, str):
-                filenames.setdefault(filename, []).append(("filename", None))
-
-            names_by_mime = metadata.get("filenames")
-            if isinstance(names_by_mime, dict):
-                for mime, name in names_by_mime.items():
-                    if isinstance(name, str):
-                        filenames.setdefault(name, []).append(("filenames", mime))
-
-            if not filenames:
-                continue
-
-            for original, entries in filenames.items():
-                new_name = allocate(original)
-                for target, key in entries:
-                    if target == "filename":
-                        metadata["filename"] = new_name
-                    else:
-                        assert key is not None
-                        metadata.setdefault("filenames", {})[key] = new_name
-
-
 def convert_notebooks() -> None:
     if not NOTEBOOK_DIR.exists():
         print("No notebooks directory found; skipping conversion.")
@@ -107,7 +57,6 @@ def convert_notebooks() -> None:
     for nb_path in notebooks:
         print(f"Converting {nb_path.relative_to(ROOT)}")
         nb_node = nbformat.read(nb_path, as_version=4)
-        ensure_unique_output_filenames(nb_node)
 
         if nb_node.cells:
             first_cell = nb_node.cells[0]
