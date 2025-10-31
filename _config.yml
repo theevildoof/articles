@@ -1,4 +1,4 @@
-title: Articles
+title: Explorations
 description: A collection of my code explorations
 theme: just-the-docs
 color_scheme: dark
@@ -15,4 +15,4 @@ url: https://theevildoof.github.io
 baseurl: /articles  # Important: this is the repo name
 
 aux_links:
-  Template Repository: https://github.com/theevildoof/articles
+  github: https://github.com/theevildoof/articles
