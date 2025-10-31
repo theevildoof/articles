@@ -16,3 +16,4 @@ baseurl: /articles  # Important: this is the repo name
 
 aux_links:
   github: https://github.com/theevildoof/articles
+  back: https://theevildoof.github.io
