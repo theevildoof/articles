@@ -31,6 +31,18 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install notebook tooling
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install nbconvert nbformat jinja2 traitlets
+      - name: Convert notebooks to Markdown
+        run: python .github/scripts/convert_notebooks.py
+      - name: Normalize Markdown front matter
+        run: python .github/scripts/cleanup_frontmatter.py docs/notebooks
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
         with:

@@ -8,7 +8,6 @@ import shutil
 
 import nbformat
 from nbconvert import MarkdownExporter
-from traitlets.config import Config
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 ROOT = SCRIPT_DIR.parent.parent
@@ -21,36 +20,59 @@ if str(SCRIPT_DIR) not in sys.path:
 from frontmatter import normalize_front_matter
 
 
+def iter_notebooks() -> list[Path]:
+    """Return the notebooks under NOTEBOOK_DIR in a predictable order."""
+    return sorted(path for path in NOTEBOOK_DIR.rglob("*.ipynb") if path.is_file())
+
+
+def _relative_base(path: Path) -> Path:
+    """Return the notebook path relative to NOTEBOOK_DIR without the .ipynb suffix."""
+    relative = path.relative_to(NOTEBOOK_DIR)
+    return relative.parent / path.stem
+
+
+def _remove_empty_directories(root: Path) -> None:
+    """Remove empty directories within ``root`` (post-order)."""
+    for directory in sorted(root.rglob("*"), reverse=True):
+        if directory.is_dir():
+            try:
+                next(directory.iterdir())
+            except StopIteration:
+                directory.rmdir()
+                print(f"Removed empty directory: {directory.relative_to(ROOT)}")
+
+
 def convert_notebooks() -> None:
     if not NOTEBOOK_DIR.exists():
         print("No notebooks directory found; skipping conversion.")
         return
 
-    notebooks = sorted(path for path in NOTEBOOK_DIR.glob("*.ipynb") if path.is_file())
+    notebooks = iter_notebooks()
     if not notebooks:
         print("No notebooks to convert.")
         return
 
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
-    expected_stems = {path.stem for path in notebooks}
+    expected_bases = {_relative_base(path) for path in notebooks}
+    expected_markdown = {base.parent / f"{base.name}.md" for base in expected_bases}
+    expected_assets = {base.parent / f"{base.name}_files" for base in expected_bases}
 
     # Remove Markdown files whose notebooks no longer exist.
-    for md_path in sorted(OUTPUT_DIR.glob("*.md")):
-        if md_path.stem not in expected_stems:
+    for md_path in sorted(OUTPUT_DIR.rglob("*.md")):
+        relative_md = md_path.relative_to(OUTPUT_DIR)
+        if relative_md not in expected_markdown:
             print(f"Removing stale export: {md_path.relative_to(ROOT)}")
             md_path.unlink()
 
     # Remove asset directories for deleted notebooks.
-    for assets_dir in sorted(OUTPUT_DIR.glob("*_files")):
-        stem = assets_dir.name.removesuffix("_files")
-        if stem not in expected_stems:
+    for assets_dir in sorted(OUTPUT_DIR.rglob("*_files")):
+        relative_assets = assets_dir.relative_to(OUTPUT_DIR)
+        if relative_assets not in expected_assets:
             print(f"Removing stale assets: {assets_dir.relative_to(ROOT)}")
             shutil.rmtree(assets_dir)
 
-    config = Config()
-    config.MarkdownExporter.preprocessors = ["nbconvert.preprocessors.ExtractOutputPreprocessor"]
-    exporter = MarkdownExporter(config=config)
+    exporter = MarkdownExporter()
     exporter.exclude_input_prompt = True
     exporter.exclude_output_prompt = True
 
@@ -68,21 +90,29 @@ def convert_notebooks() -> None:
             else:
                 print(f"Warning: {nb_path.name} does not start with a front matter cell", file=sys.stderr)
 
-        body, resources = exporter.from_notebook_node(nb_node)
+        relative_base = _relative_base(nb_path)
+        output_md = OUTPUT_DIR / relative_base.parent / f"{relative_base.name}.md"
+        output_md.parent.mkdir(parents=True, exist_ok=True)
+
+        resources_input = {
+            "metadata": {"path": str(nb_path.parent)},
+            "output_files_dir": str(relative_base.parent / f"{relative_base.name}_files"),
+        }
+
+        body, resources = exporter.from_notebook_node(nb_node, resources=resources_input)
         body = normalize_front_matter(body)
 
-        output_md = OUTPUT_DIR / nb_path.with_suffix(".md").name
         previous = output_md.read_text(encoding="utf-8") if output_md.exists() else None
         if previous != body:
             output_md.write_text(body, encoding="utf-8")
             print(f"Wrote {output_md.relative_to(ROOT)}")
 
-        output_dir_name = resources.get("output_files_dir") if resources else None
-        if output_dir_name:
-            assets_dir = OUTPUT_DIR / output_dir_name
-        else:
-            assets_dir = OUTPUT_DIR / f"{nb_path.stem}_files"
-
+        output_dir_name = (
+            resources.get("output_files_dir", resources_input["output_files_dir"])
+            if resources
+            else resources_input["output_files_dir"]
+        )
+        assets_dir = OUTPUT_DIR / output_dir_name
         if assets_dir.exists():
             shutil.rmtree(assets_dir)
             print(f"Cleared {assets_dir.relative_to(ROOT)}")
@@ -96,6 +126,7 @@ def convert_notebooks() -> None:
             asset_path.write_bytes(data)
             print(f"Wrote {asset_path.relative_to(ROOT)}")
 
+    _remove_empty_directories(OUTPUT_DIR)
     print("Notebook conversion complete.")
 
 
